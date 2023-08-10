@@ -1,0 +1,212 @@
+VORGEHENSWEISE:
+
+//Schritt 1: Backend Ordner anlegen + Packages installieren
+npm init -y
+npm i express cors mongoose
+npm i morgan multer cloudinary
+npm uuid nicht nötig bei mongoose dotenv
+npm i dotenv
+
+Übersicht:
+("cloudinary": "^1.39.0",
+    "cookie-parser": "^1.4.6", => cookie + token (authentifizierung)
+    "cors": "^2.8.5", => für hashen
+    "dotenv": "^16.3.1", => Verschlüsselung von Keys
+    "express": "^4.18.2",
+    "form-data": "^4.0.0",
+    "jsonwebtoken": "^9.0.1",
+    "mailgun.js": "^9.2.0",
+    "mongoose": "^7.4.1",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1")
+
+// Schritt 2:
+.env + .gitignore -> auf höchster Ebene anlegen:
+
+.env: MONGO_URI + PORT + Cloudinary + Token_Secret + (Mailgun/Render-external-url/app-name)
+.gitignore: **/node_modules + .env
+
+
+
+//Schritt 3: Änderungen in package json - module,script-dev
+"type":"module",
+in script "dev": "node --watch server.js"
+
+// Schritt 4: Importe in server.js
+Beispiel:
+import "./config/config.js";
+import { v2 as cloudinary } from "cloudinary";
+import express from "express";
+import morgan from "morgan";
+import cors from "cors";
+import multer from "multer";
+import "./models/index.js";
+import { Inventory } from "./models/InventarModel.js";
+import { User } from "./models/UserModel.js";
+import { userRouter } from "./routes.js";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+
+
+// Schritt 5: Anpassungen im Frontend in Vite
+export default defineConfig({
+  plugins: [react()],
+  server:{
+    port:3000,
+    proxy: {
+      "/api": {target: "http://localhost:3001", changeOrigin: true}
+    }
+  }
+})
+
+SERVER.JS 
+
+//Schritt 5: Variablen in Server.js anlegen
+const app = express();
+const PORT = 3001;
+
+//Schritt 6: Middelwares anlegen
+app.use(express.json())
+app.use(morgan("dev"))
+app.use(cors())
+
+//Schritt 7: Listener anlegen
+app.listen(PORT, () => {
+	console.log(`Server läuft auf Port: ${PORT}`);
+});
+
+// Schritt 8: Cloudinary einrichten + keys in .env:
+
+cloudinary.config({ 
+    cloud_name: process.env.CLOUDINARY_CLOUDNAME, 
+    api_key: process.env.CLOUDINARY_API_KEY, 
+    api_secret: process.env.CLOUDINARY_API_SECRET 
+}); 
+
+
+//Schritt 9: Routen definieren
+
+Server testen:
+app.get("/status", (req,res) => {
+    res.send("Server läuft problemlos")
+})
+erste Route testen : http://localhost:3001/status
+
+Methoden:
+GET -> get req an Server damit wir was zurück bekommen (kann keine Daten empfangen, die anderen schon)
+POST -> hinzufügen
+PUT -> bearbeiten
+DELETE -> löschen
+
+//Schritt 9: 
+- mongoose models ordner im Backend anlegen
+- index.js drin erstellen
+- import mongoose from "mongoose"
+- mongoose.connect("mongodb://localhost:27017")
+-> für Uri ("mongodb://localhost:27017/NAME DER DATENBANK") in mongo db oben links string copy
+
++ in server.js importieren:
+import "./models/index.js" -> connecten zur MeineNeueDatenbank
+
+
+//Schritt 10: Schema anlegen
+
+- Model datei anlegen
+- Schema festlegen
+- export const Car = mongoose.model("Car", carSchema)
+//name = collection name
+// + schema name
+
+- in server.js importieren:
+import {Car} from "./models/CarModel.js"
+
+
+//Schritt 11: alle Routen anlegen + mit Thunderclient testen
+
+1. Server testen:
+app.get("/status", (req,res) => {
+    res.send("Server läuft")
+});
+
+2. PUT Route Beispiel:
+- PUT http://localhost:3001/api/update -> test thunderclient
+- in json: 
+{
+  "title":"update title"
+}
+
+3. POST Route Beispiel:
+über JSON Reiter:
+app.post("/api/createCar", async (req,res) => {
+    try {
+        //console.log(req.body);
+        //neuen Post in Var speichern
+        //Car Model exportieren
+        //()Objekt rein
+        // im req.body alles was ins backend geht
+        const newPostCar = await Car.create(req.body)
+        //als json zurückschicken
+        res.json(newPostCar)
+    } catch (error) {
+        console.log(error);
+        res.status(501).end()
+    }
+}
+
+
+
+4. POST + Bild: 
+- in Body -> Form eingeben:
+  title - Test
+  author - Author Test
+
+  checkbox Files für Image:
+  image - Datei auswählen
+
+JETZT 
+Check in MongoDB ob alle Routen passen
+
+===============================================================
+
+FRONTEND
+
+//Packages:
+"axios": "^1.4.0",
+"react": "^18.2.0",
+"react-dom": "^18.2.0",
+"react-router-dom": "^6.14.2"
+
+
+//Schritt 1: 
+Ordner erstellen
+npm create vite@latest
+name
+cd frontend
+npm i
+npm run dev
+
+//Schritt 2:
+App.jsx ausfüllen mit Routen + Paths
+
+//Schritt 3:
+Daten fetchen mit fetch oder axios:
+
+//Schritt 4: BESSER weil man code spart + besseres error handling
+axios installieren
+importieren
+Funktion aufstellen
+
+danach Test im Browser on Object in console angezeigt wird
+
+// Schritt 5: Proxy in vite eingeben wenn man es nutzt!
+export default defineConfig({
+  plugins: [react()],
+  server:{
+    port:3000,
+    proxy: {
+      "/api": {target: "http://localhost:3001/", changeOrigin: true}
+    }
+  }
+})
+
