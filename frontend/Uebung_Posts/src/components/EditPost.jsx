@@ -96,6 +96,7 @@ const EditPost = ({ id, title, author, imageUrl, description, setRefresh }) => {
                 onClick={() => {
                   setDescriptionInput((prev) => !prev);
                 }}
+                //Classnames important??
               >
                 EDIT
               </button>
